@@ -14,7 +14,6 @@ current_track_path = ""
 current_play_time = float(0.0)
 track_duration = 0
 
-#  tasks: know duration of audio files, made music slider have track length
 
 #  utility functions
 
@@ -56,6 +55,7 @@ def select_track():
 
 def play():
     Pause_resume_button.config(text="=", command=pause)
+
     try:
         mixer.init()
         mixer.music.load(current_track_path)
@@ -99,9 +99,8 @@ def manipulate_track_time(curr_time):
     curr_time = float(curr_time)
     mixer.music.play(start=curr_time)
 
+    
 # Main Screen
-
-
 master = Tk()  # creating the main window
 master.title("Ultimate Music Player")  # assigning a name to our main window (program)
 master['bg'] = "#FFFFFF"  # setting white background color for main  window
@@ -130,6 +129,7 @@ Music_Slider.grid(row=5)
 Volume_Slider = Scale(master, orient="horizontal", length=80, from_=0, to=1, resolution=0.01, command=manipulate_volume)
 Volume_Slider.grid(row=6)
 Volume_Slider.set(current_volume)
+
 
 # Labels
 Track_being_played = Label(master, text="")
