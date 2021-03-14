@@ -1,28 +1,61 @@
-from pygame import mixer  # mixer is going to be used as module that manipulates audio files (playing, pausing etc..)
-from tkinter import Tk
-from tkinter import Label  # interface element label
-from tkinter import Button  # interface element button
-from tkinter import Scale  # gives us slider element
-from tkinter import filedialog  # module for file management (choosing a track essentially)
+#  mixer is a module from pygame that plays music
+#  Tk creates main window
+#  Label, Button etc.. are just ui elements
+#  subprocess enables cmd console for us to work with ffmpeg utility
+from pygame import mixer
+from tkinter import Tk, Label, Button, Scale, filedialog
+from os import chdir
+import subprocess
+
 
 current_volume = float(0.5)
 current_track_title = ""
 current_track_path = ""
 current_play_time = float(0.0)
-# Functions
+track_duration = 0
+
+
+#  utility functions
+
+
+def know_track_duration(path_to_track):
+    global current_track_title
+    #  making path to track clean
+    path_to_track = path_to_track.split("/")
+    del path_to_track[-1]
+    path_to_track = '/'.join(path_to_track)
+    #  --------------------------
+    try:
+        process = subprocess.run(f'ffprobe -v quiet -show_entries format=duration -of default=noprint_wrappers=1 {current_track_title}', shell=True, capture_output=True, text=True, cwd=path_to_track)
+        duration = process.stdout.split("=")  #  this is gonna be something like duration=370.00032
+        duration = duration[-1]
+        duration = int(float(duration))
+        return duration
+    except Exception as e:
+        print(e)
+
+
+#  methods
 
 
 def select_track():
     global current_track_title
     global current_track_path
-    filename = filedialog.askopenfilename(initialdir="C:/")
-    current_track_path = filename
-    current_track_title = filename.split("/")  # divided the whole directory into pieces by "/" symbol and placed in them in list
+    global track_duration
+
+    file_path = filedialog.askopenfilename(initialdir="C:/")
+    current_track_path = file_path
+    current_track_title = file_path.split("/")  # divided the whole directory into pieces by "/" symbol and placed  them in list
     current_track_title = current_track_title[-1]  # took the last element of the list (name of track actually)
+    track_duration = know_track_duration(file_path)
+    Music_Slider.config(to=track_duration)  #  giving our music slider the right length
+
+#  gotta edit this trio
 
 
 def play():
-    Pause_resume_button.config(text="pause", command=pause)
+    Pause_resume_button.config(text="=", command=pause)
+
     try:
         mixer.init()
         mixer.music.load(current_track_path)
@@ -34,15 +67,39 @@ def play():
 
 
 def pause():
+    global current_play_time
+    Pause_resume_button.config(text="^", command=resume)
     try:
-        Pause_resume_button.config(text="resume", command=resume)
+        current_play_time = mixer.music.get_pos()
         mixer.music.pause()
     except Exception as e:
         print(e)
 
-def resume():
-    pass
 
+def resume():
+    global current_play_time
+    Pause_resume_button.config(text="=", command=pause)
+    try:
+        mixer.init()
+        mixer.music.load(current_track_path)
+        mixer.music.set_pos(current_play_time)
+    except Exception as e:
+        print(e)
+
+
+def manipulate_volume(curr_volume):
+    try:
+        mixer.music.set_volume(Volume_Slider.get())
+    except Exception as e:
+        print(e)
+
+
+def manipulate_track_time(curr_time):
+    mixer.music.stop()
+    curr_time = float(curr_time)
+    mixer.music.play(start=curr_time)
+
+    
 # Main Screen
 master = Tk()  # creating the main window
 master.title("Ultimate Music Player")  # assigning a name to our main window (program)
@@ -62,15 +119,17 @@ Skip_forward_button.grid(row=2)
 Skip_backwards_button = Button(master, text="<<")
 Skip_backwards_button.grid(row=3)
 
-Pause_resume_button = Button(master, text="play", command=play)
+Pause_resume_button = Button(master, text="^", command=play)
 Pause_resume_button.grid(row=4)
 
 # Sliders
-Music_Slider = Scale(master, )
+Music_Slider = Scale(master, orient="horizontal", length=330, from_=0, resolution=1, command=manipulate_track_time)
 Music_Slider.grid(row=5)
 
-Volume_Slider = Scale(master, )
+Volume_Slider = Scale(master, orient="horizontal", length=80, from_=0, to=1, resolution=0.01, command=manipulate_volume)
 Volume_Slider.grid(row=6)
+Volume_Slider.set(current_volume)
+
 
 # Labels
 Track_being_played = Label(master, text="")
