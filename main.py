@@ -1,18 +1,20 @@
 #  mixer is a module from pygame that plays music
+#  event is a module that enables us to use events such as mouse hold
 #  Tk creates main window
 #  Label, Button etc.. are just ui elements
 #  subprocess enables cmd console for us to work with ffmpeg utility
-from pygame import mixer
+
+from pygame import mixer, event
 from tkinter import Tk, Label, Button, Scale, filedialog
 from os import chdir
-import subprocess
-
+from datetime import timedelta
+from subprocess import run
 
 current_volume = float(0.5)
 current_track_title = ""
 current_track_path = ""
-current_play_time = float(0.0)
 track_duration = 0
+is_playing = False
 
 
 #  utility functions
@@ -26,7 +28,7 @@ def know_track_duration(path_to_track):
     path_to_track = '/'.join(path_to_track)
     #  --------------------------
     try:
-        process = subprocess.run(f'ffprobe -v quiet -show_entries format=duration -of default=noprint_wrappers=1 {current_track_title}', shell=True, capture_output=True, text=True, cwd=path_to_track)
+        process = run(f'ffprobe -v quiet -show_entries format=duration -of default=noprint_wrappers=1 {current_track_title}', shell=True, capture_output=True, text=True, cwd=path_to_track)
         duration = process.stdout.split("=")  #  this is gonna be something like duration=370.00032
         duration = duration[-1]
         duration = int(float(duration))
@@ -35,54 +37,69 @@ def know_track_duration(path_to_track):
         print(e)
 
 
-#  methods
+#  functions
 
 
 def select_track():
     global current_track_title
     global current_track_path
     global track_duration
+    global is_playing
 
-    file_path = filedialog.askopenfilename(initialdir="C:/")
-    current_track_path = file_path
-    current_track_title = file_path.split("/")  # divided the whole directory into pieces by "/" symbol and placed  them in list
-    current_track_title = current_track_title[-1]  # took the last element of the list (name of track actually)
-    track_duration = know_track_duration(file_path)
-    Music_Slider.config(to=track_duration)  #  giving our music slider the right length
+    try:
+        file_path = filedialog.askopenfilename(initialdir="C:/")
+        if file_path == "":
+            return
+        current_track_path = file_path
+        current_track_title = file_path.split("/")  # divided the whole directory into pieces by "/" symbol and placed  them in list
+        current_track_title = current_track_title[-1]  # took the last element of the list (name of track actually)
+        Track_being_played.config(text="Now playing:\n" + str(current_track_title))
+        track_duration = know_track_duration(file_path)
+
+        Music_Slider.config(to=track_duration)  #  giving our music slider the right length
+        Music_Slider.set(0)
+
+        Track_length_hms_label.config(text=f"{timedelta(seconds=track_duration)}")
+        Pause_resume_button.config(text="^", command=play)
+
+        mixer.init()
+        mixer.music.load(current_track_path)
+        mixer.music.set_volume(Volume_Slider.get())
+    except Exception as e:
+        print(e)
 
 #  gotta edit this trio
 
 
 def play():
-    Pause_resume_button.config(text="=", command=pause)
+    global is_playing
+    is_playing = True
 
+    Pause_resume_button.config(text="=", command=pause)
     try:
-        mixer.init()
-        mixer.music.load(current_track_path)
-        mixer.music.set_volume(current_volume)
-        mixer.music.play()
-        Track_being_played.config(text="Now playing:\n" + str(current_track_title))
+        mixer.music.play(start=Music_Slider.get())
     except Exception as e:
         print(e)
 
 
 def pause():
-    global current_play_time
+    global is_playing
+    is_playing = False
+
     Pause_resume_button.config(text="^", command=resume)
     try:
-        current_play_time = mixer.music.get_pos()
         mixer.music.pause()
     except Exception as e:
         print(e)
 
 
 def resume():
-    global current_play_time
+    global is_playing
+    is_playing = True
+
     Pause_resume_button.config(text="=", command=pause)
     try:
-        mixer.init()
-        mixer.music.load(current_track_path)
-        mixer.music.set_pos(current_play_time)
+        mixer.music.play(start=Music_Slider.get())
     except Exception as e:
         print(e)
 
@@ -95,9 +112,15 @@ def manipulate_volume(curr_volume):
 
 
 def manipulate_track_time(curr_time):
-    mixer.music.stop()
-    curr_time = float(curr_time)
-    mixer.music.play(start=curr_time)
+    global is_playing
+    Time_passed_label.config(text=f"{timedelta(seconds=Music_Slider.get())}")
+    try:
+        if is_playing:
+            mixer.music.stop()
+            curr_time = int(curr_time)
+            mixer.music.play(curr_time)
+    except Exception as e:
+        print(e)
 
     
 # Main Screen
@@ -123,7 +146,7 @@ Pause_resume_button = Button(master, text="^", command=play)
 Pause_resume_button.grid(row=4)
 
 # Sliders
-Music_Slider = Scale(master, orient="horizontal", length=330, from_=0, resolution=1, command=manipulate_track_time)
+Music_Slider = Scale(master, orient="horizontal", length=330, from_=0, resolution=1, command=manipulate_track_time, repeatdelay=0)
 Music_Slider.grid(row=5)
 
 Volume_Slider = Scale(master, orient="horizontal", length=80, from_=0, to=1, resolution=0.01, command=manipulate_volume)
@@ -132,7 +155,13 @@ Volume_Slider.set(current_volume)
 
 
 # Labels
-Track_being_played = Label(master, text="")
+Track_being_played = Label(master, text="", bg="#ffffff")
 Track_being_played.grid(row=7)
+
+Track_length_hms_label = Label(master, text="0:00:00", bg="#ffffff")
+Track_length_hms_label.grid(row=8)
+
+Time_passed_label = Label(master, text="0:00:00", bg="#ffffff")
+Time_passed_label.grid(row=9)
 
 master.mainloop()  # we need to use this function, in order to constantly keep our window ready
