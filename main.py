@@ -113,14 +113,10 @@ def manipulate_volume(curr_volume):
 
 def manipulate_track_time(curr_time):
     global is_playing
-    Time_passed_label.config(text=f"{timedelta(seconds=Music_Slider.get())}")
-    try:
-        if is_playing:
-            mixer.music.stop()
-            curr_time = int(curr_time)
-            mixer.music.play(curr_time)
-    except Exception as e:
-        print(e)
+    if is_playing:
+        mixer.music.play(start=Music_Slider.get())
+    else:
+        pass
 
     
 # Main Screen
@@ -146,7 +142,8 @@ Pause_resume_button = Button(master, text="^", command=play)
 Pause_resume_button.grid(row=4)
 
 # Sliders
-Music_Slider = Scale(master, orient="horizontal", length=330, from_=0, resolution=1, command=manipulate_track_time, repeatdelay=0)
+Music_Slider = Scale(master, orient="horizontal", length=330, from_=0, resolution=1, repeatdelay=0)
+Music_Slider.bind('<ButtonRelease-1>', manipulate_track_time)
 Music_Slider.grid(row=5)
 
 Volume_Slider = Scale(master, orient="horizontal", length=80, from_=0, to=1, resolution=0.01, command=manipulate_volume)
