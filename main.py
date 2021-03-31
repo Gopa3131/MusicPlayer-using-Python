@@ -5,7 +5,10 @@
 #  subprocess enables cmd console for us to work with ffmpeg utility
 
 from pygame import mixer, event
+
 from tkinter import Tk, Label, Button, Scale, filedialog
+from tkinter import *
+
 from os import chdir
 from datetime import timedelta
 from subprocess import run
@@ -68,16 +71,16 @@ def select_track():
     except Exception as e:
         print(e)
 
-#  gotta edit this trio
-
 
 def play():
     global is_playing
     is_playing = True
 
     Pause_resume_button.config(text="=", command=pause)
+
     try:
         mixer.music.play(start=Music_Slider.get())
+        update_music_slider_position()
     except Exception as e:
         print(e)
 
@@ -86,22 +89,26 @@ def pause():
     global is_playing
     is_playing = False
 
-    Pause_resume_button.config(text="^", command=resume)
+    Pause_resume_button.config(text="^", command=play)
     try:
-        mixer.music.pause()
+        mixer.music.stop()
     except Exception as e:
         print(e)
 
 
-def resume():
-    global is_playing
-    is_playing = True
+def update_music_slider_position():
+    current_song_position = int(mixer.music.get_pos()/1000)
+    Time_passed_label.config(text=current_song_position)
 
-    Pause_resume_button.config(text="=", command=pause)
-    try:
-        mixer.music.play(start=Music_Slider.get())
-    except Exception as e:
-        print(e)
+    if is_playing:
+        Time_passed_label.after(1000, update_music_slider_position)
+        Music_Slider.set(current_song_position)
+        print(current_song_position)
+    else:
+        pass
+
+
+
 
 
 def manipulate_volume(curr_volume):
@@ -118,47 +125,64 @@ def manipulate_track_time(curr_time):
     else:
         pass
 
-    
+def slideOfmusicSlider(x):
+    x = int(x)
+    Time_passed_label.config(text=timedelta(seconds=x))
+
 # Main Screen
 master = Tk()  # creating the main window
 master.title("Ultimate Music Player")  # assigning a name to our main window (program)
 master['bg'] = "#FFFFFF"  # setting white background color for main  window
-master.geometry('600x600')
+master.geometry('450x450')
 master.resizable(False, False)
+
+# Creating and packing frames
+
+
+Main_bottom_frame = Frame(master)
+Main_bottom_frame.pack(side=BOTTOM, pady=20)
+
+Control_buttons_frame = Frame(Main_bottom_frame)
+Control_buttons_frame.pack(side=BOTTOM)
+
+Track_time_frame = Frame(Main_bottom_frame)
+Track_time_frame.pack(fill=X, side=BOTTOM)
 
 # Images
 
 # Buttons
 Select_track_button = Button(master, text="Select track", command=select_track)
-Select_track_button.grid(row=1)
+Select_track_button.pack()
+Skip_forward_button = Button(Control_buttons_frame, text=">>")
 
-Skip_forward_button = Button(master, text=">>")
-Skip_forward_button.grid(row=2)
+Skip_backwards_button = Button(Control_buttons_frame, text="<<")
 
-Skip_backwards_button = Button(master, text="<<")
-Skip_backwards_button.grid(row=3)
-
-Pause_resume_button = Button(master, text="^", command=play)
-Pause_resume_button.grid(row=4)
+Pause_resume_button = Button(Control_buttons_frame, text="^", command=play)
 
 # Sliders
-Music_Slider = Scale(master, orient="horizontal", length=330, from_=0, resolution=1, repeatdelay=0)
+Music_Slider = Scale(Main_bottom_frame, orient="horizontal", length=330, from_=0, resolution=1, repeatdelay=0, command=slideOfmusicSlider)
 Music_Slider.bind('<ButtonRelease-1>', manipulate_track_time)
-Music_Slider.grid(row=5)
 
-Volume_Slider = Scale(master, orient="horizontal", length=80, from_=0, to=1, resolution=0.01, command=manipulate_volume)
-Volume_Slider.grid(row=6)
+Volume_Slider = Scale(Main_bottom_frame, orient="horizontal", length=80, from_=0, to=1, resolution=0.01, command=manipulate_volume)
 Volume_Slider.set(current_volume)
 
-
 # Labels
-Track_being_played = Label(master, text="", bg="#ffffff")
-Track_being_played.grid(row=7)
+Track_being_played = Label(master, text="\n")
 
-Track_length_hms_label = Label(master, text="0:00:00", bg="#ffffff")
-Track_length_hms_label.grid(row=8)
+Track_length_hms_label = Label(Track_time_frame, text="0:00:00")
 
-Time_passed_label = Label(master, text="0:00:00", bg="#ffffff")
-Time_passed_label.grid(row=9)
+Time_passed_label = Label(Track_time_frame, text="0:00:00")
+
+# Packing widgets into frames
+Music_Slider.pack(side=TOP)
+
+Skip_backwards_button.pack(side=LEFT, padx=10)
+Pause_resume_button.pack(side=LEFT, padx=10)
+Skip_forward_button.pack(side=LEFT,padx=10)
+
+#Volume_Slider.pack(side=RIGHT,padx=20, ipady=6)
+
+Time_passed_label.pack(side=LEFT)
+Track_length_hms_label.pack(side=RIGHT)
 
 master.mainloop()  # we need to use this function, in order to constantly keep our window ready
