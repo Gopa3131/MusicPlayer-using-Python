@@ -20,6 +20,7 @@ track_duration = 0
 is_playing = False
 
 
+
 #  utility functions
 
 
@@ -88,7 +89,6 @@ def play():
 def pause():
     global is_playing
     is_playing = False
-
     Pause_resume_button.config(text="^", command=play)
     try:
         mixer.music.stop()
@@ -97,18 +97,12 @@ def pause():
 
 
 def update_music_slider_position():
-    current_song_position = int(mixer.music.get_pos()/1000)
-    Time_passed_label.config(text=current_song_position)
-
+    global is_playing
+    current_song_position = Music_Slider.get()
     if is_playing:
         Time_passed_label.after(1000, update_music_slider_position)
-        Music_Slider.set(current_song_position)
+        Music_Slider.set(current_song_position + 1)
         print(current_song_position)
-    else:
-        pass
-
-
-
 
 
 def manipulate_volume(curr_volume):
@@ -125,9 +119,14 @@ def manipulate_track_time(curr_time):
     else:
         pass
 
+def stop_while_manipulating(x):
+    if is_playing:
+        mixer.music.stop()
+
 def slideOfmusicSlider(x):
     x = int(x)
     Time_passed_label.config(text=timedelta(seconds=x))
+    print("yes")
 
 # Main Screen
 master = Tk()  # creating the main window
@@ -162,6 +161,7 @@ Pause_resume_button = Button(Control_buttons_frame, text="^", command=play)
 # Sliders
 Music_Slider = Scale(Main_bottom_frame, orient="horizontal", length=330, from_=0, resolution=1, repeatdelay=0, command=slideOfmusicSlider)
 Music_Slider.bind('<ButtonRelease-1>', manipulate_track_time)
+Music_Slider.bind('<ButtonPress-1>', stop_while_manipulating)
 
 Volume_Slider = Scale(Main_bottom_frame, orient="horizontal", length=80, from_=0, to=1, resolution=0.01, command=manipulate_volume)
 Volume_Slider.set(current_volume)
