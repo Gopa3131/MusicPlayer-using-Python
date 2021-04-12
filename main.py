@@ -12,12 +12,14 @@ from tkinter import *
 from os import chdir
 from datetime import timedelta
 from subprocess import run
+from time import sleep
 
 current_volume = float(0.5)
 current_track_title = ""
 current_track_path = ""
 track_duration = 0
 is_playing = False
+after_id = 0
 
 
 
@@ -41,7 +43,7 @@ def know_track_duration(path_to_track):
         print(e)
 
 
-#  functions
+#  interface functions
 
 
 def select_track():
@@ -76,7 +78,6 @@ def select_track():
 def play():
     global is_playing
     is_playing = True
-
     Pause_resume_button.config(text="=", command=pause)
 
     try:
@@ -88,19 +89,56 @@ def play():
 
 def pause():
     global is_playing
+    global after_id
     is_playing = False
     Pause_resume_button.config(text="^", command=play)
     try:
+        Time_passed_label.after_cancel(after_id)
         mixer.music.stop()
     except Exception as e:
         print(e)
 
 
+def skip_forward():
+    global is_playing
+    if is_playing:
+        is_playing = False
+        Time_passed_label.after_cancel(after_id)
+        current_pos = Music_Slider.get()
+        mixer.music.stop()
+        Music_Slider.set(current_pos + 4)
+        play()
+    else:
+        current_pos = Music_Slider.get()
+        Music_Slider.set(current_pos + 5)
+
+
+def skip_backwards():
+    global is_playing
+    if is_playing:
+        is_playing = False
+        Time_passed_label.after_cancel(after_id)
+        current_pos = Music_Slider.get()
+        mixer.music.stop()
+        if current_pos <= 5:
+            Music_Slider.set(0)
+        else:
+            Music_Slider.set(current_pos-6)
+        play()
+    else:
+        current_pos = Music_Slider.get()
+        if current_pos <= 5:
+            Music_Slider.set(0)
+        else:
+            Music_Slider.set(current_pos - 5)
+
+
 def update_music_slider_position():
     global is_playing
+    global after_id
     current_song_position = Music_Slider.get()
     if is_playing:
-        Time_passed_label.after(1000, update_music_slider_position)
+        after_id = Time_passed_label.after(1000, update_music_slider_position)
         Music_Slider.set(current_song_position + 1)
         print(current_song_position)
 
@@ -152,9 +190,9 @@ Track_time_frame.pack(fill=X, side=BOTTOM)
 # Buttons
 Select_track_button = Button(master, text="Select track", command=select_track)
 Select_track_button.pack()
-Skip_forward_button = Button(Control_buttons_frame, text=">>")
+Skip_forward_button = Button(Control_buttons_frame, text=">>", command=skip_forward)
 
-Skip_backwards_button = Button(Control_buttons_frame, text="<<")
+Skip_backwards_button = Button(Control_buttons_frame, text="<<", command=skip_backwards)
 
 Pause_resume_button = Button(Control_buttons_frame, text="^", command=play)
 
