@@ -34,7 +34,7 @@ def know_track_duration(path_to_track):
     path_to_track = '/'.join(path_to_track)
     #  --------------------------
     try:
-        process = run(f'ffprobe -v quiet -show_entries format=duration -of default=noprint_wrappers=1 {current_track_title}', shell=True, capture_output=True, text=True, cwd=path_to_track)
+        process = run(f'ffprobe -v quiet -show_entries format=duration -of default=noprint_wrappers=1 "{current_track_title}"', shell=True, capture_output=True, text=True, cwd=path_to_track)
         duration = process.stdout.split("=")  #  this is gonna be something like duration=370.00032
         duration = duration[-1]
         duration = int(float(duration))
@@ -86,6 +86,10 @@ def play():
     except Exception as e:
         print(e)
 
+def replay():
+    Pause_resume_button.config(text="=", command=pause)
+    Music_Slider.set(0)
+    play()
 
 def pause():
     global is_playing
@@ -152,19 +156,30 @@ def manipulate_volume(curr_volume):
 
 def manipulate_track_time(curr_time):
     global is_playing
+    if Music_Slider.get() == track_duration:
+        Pause_resume_button.config(text="↺", command=replay)
+        Time_passed_label.after_cancel(after_id)
+        is_playing = False
     if is_playing:
-        mixer.music.play(start=Music_Slider.get())
-    else:
-        pass
+        play()
+
+
 
 def stop_while_manipulating(x):
+    global after_id
     if is_playing:
+        Time_passed_label.after_cancel(after_id)
         mixer.music.stop()
 
+
 def slideOfmusicSlider(x):
-    x = int(x)
-    Time_passed_label.config(text=timedelta(seconds=x))
-    print("yes")
+    global after_id
+    Time_passed_label.config(text=timedelta(seconds=int(x)))
+    if int(x) == track_duration:
+        is_playing = False
+        Pause_resume_button.config(text="↺", command=replay)
+        Time_passed_label.after_cancel(after_id)
+
 
 # Main Screen
 master = Tk()  # creating the main window
@@ -185,9 +200,9 @@ Control_buttons_frame.pack(side=BOTTOM)
 Track_time_frame = Frame(Main_bottom_frame)
 Track_time_frame.pack(fill=X, side=BOTTOM)
 
-# Images
 
 # Buttons
+
 Select_track_button = Button(master, text="Select track", command=select_track)
 Select_track_button.pack()
 Skip_forward_button = Button(Control_buttons_frame, text=">>", command=skip_forward)
