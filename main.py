@@ -4,15 +4,13 @@
 #  Label, Button etc.. are just ui elements
 #  subprocess enables cmd console for us to work with ffmpeg utility
 
-from pygame import mixer, event
+from pygame import mixer
 
 from tkinter import Tk, Label, Button, Scale, filedialog
 from tkinter import *
 
-from os import chdir
 from datetime import timedelta
 from subprocess import run
-from time import sleep
 
 current_volume = float(0.5)
 current_track_title = ""
@@ -20,6 +18,7 @@ current_track_path = ""
 track_duration = 0
 is_playing = False
 after_id = 0
+media_filetypes = [('media files', ('*.mp3', '*.mp4', '*.flac', '*.ogg', '*.wav', '*.ape', '*.au', '*.aiff'))]
 
 
 
@@ -53,7 +52,7 @@ def select_track():
     global is_playing
 
     try:
-        file_path = filedialog.askopenfilename(initialdir="C:/")
+        file_path = filedialog.askopenfilename(initialdir="C:/", filetypes=media_filetypes)
         if file_path == "":
             return
         current_track_path = file_path
@@ -67,6 +66,7 @@ def select_track():
 
         Track_length_hms_label.config(text=f"{timedelta(seconds=track_duration)}")
         Pause_resume_button.config(text="^", command=play)
+        Music_Slider.config(state=ACTIVE)
 
         mixer.init()
         mixer.music.load(current_track_path)
@@ -164,7 +164,6 @@ def manipulate_track_time(curr_time):
         play()
 
 
-
 def stop_while_manipulating(x):
     global after_id
     if is_playing:
@@ -190,7 +189,6 @@ master.resizable(False, False)
 
 # Creating and packing frames
 
-
 Main_bottom_frame = Frame(master)
 Main_bottom_frame.pack(side=BOTTOM, pady=20)
 
@@ -200,11 +198,18 @@ Control_buttons_frame.pack(side=BOTTOM)
 Track_time_frame = Frame(Main_bottom_frame)
 Track_time_frame.pack(fill=X, side=BOTTOM)
 
+Playlist_frame = Frame(master)
+Playlist_frame.pack(fill=X, padx=20)
+
+# Play list
+
+Playlist_scrollbar = Scrollbar(Playlist_frame)
+Track_box = Listbox(Playlist_frame, bg='purple', fg='white', width=100, yscrollcommand=Playlist_scrollbar.set)
+
 
 # Buttons
 
 Select_track_button = Button(master, text="Select track", command=select_track)
-Select_track_button.pack()
 Skip_forward_button = Button(Control_buttons_frame, text=">>", command=skip_forward)
 
 Skip_backwards_button = Button(Control_buttons_frame, text="<<", command=skip_backwards)
@@ -212,7 +217,7 @@ Skip_backwards_button = Button(Control_buttons_frame, text="<<", command=skip_ba
 Pause_resume_button = Button(Control_buttons_frame, text="^", command=play)
 
 # Sliders
-Music_Slider = Scale(Main_bottom_frame, orient="horizontal", length=330, from_=0, resolution=1, repeatdelay=0, command=slideOfmusicSlider)
+Music_Slider = Scale(Main_bottom_frame, state=DISABLED, orient="horizontal", showvalue=False, length=330, from_=0, resolution=1, repeatdelay=0, command=slideOfmusicSlider)
 Music_Slider.bind('<ButtonRelease-1>', manipulate_track_time)
 Music_Slider.bind('<ButtonPress-1>', stop_while_manipulating)
 
@@ -227,6 +232,12 @@ Track_length_hms_label = Label(Track_time_frame, text="0:00:00")
 Time_passed_label = Label(Track_time_frame, text="0:00:00")
 
 # Packing widgets into frames
+Select_track_button.pack(pady=15)
+
+Playlist_scrollbar.pack(side=RIGHT,fill=Y)
+
+Track_box.pack(pady=30, padx=20)
+
 Music_Slider.pack(side=TOP)
 
 Skip_backwards_button.pack(side=LEFT, padx=10)
