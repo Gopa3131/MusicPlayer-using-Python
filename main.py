@@ -14,7 +14,7 @@ from subprocess import run
 
 current_volume = float(0.5)
 current_track_title = ""
-current_track_path = ""
+current_tracks_path = ""
 track_duration = 0
 is_playing = False
 after_id = 0
@@ -27,11 +27,6 @@ media_filetypes = [('media files', ('*.mp3', '*.mp4', '*.flac', '*.ogg', '*.wav'
 
 def know_track_duration(path_to_track):
     global current_track_title
-    #  making path to track clean
-    path_to_track = path_to_track.split("/")
-    del path_to_track[-1]
-    path_to_track = '/'.join(path_to_track)
-    #  --------------------------
     try:
         process = run(f'ffprobe -v quiet -show_entries format=duration -of default=noprint_wrappers=1 "{current_track_title}"', shell=True, capture_output=True, text=True, cwd=path_to_track)
         duration = process.stdout.split("=")  #  this is gonna be something like duration=370.00032
@@ -45,38 +40,40 @@ def know_track_duration(path_to_track):
 #  interface functions
 
 
-def select_track():
-    global current_track_title
-    global current_track_path
-    global track_duration
-    global is_playing
-
+def select_tracks():
+    global current_tracks_path
     try:
-        file_path = filedialog.askopenfilename(initialdir="C:/", filetypes=media_filetypes)
-        if file_path == "":
-            return
-        current_track_path = file_path
-        current_track_title = file_path.split("/")  # divided the whole directory into pieces by "/" symbol and placed  them in list
-        current_track_title = current_track_title[-1]  # took the last element of the list (name of track actually)
-        Track_being_played.config(text="Now playing:\n" + str(current_track_title))
-        track_duration = know_track_duration(file_path)
+        selected_tracks = filedialog.askopenfilenames(initialdir="C:/", filetypes=media_filetypes)
+        #if selected_tracks == "":
+         #   return
+        current_tracks_path = (selected_tracks[0].split('/'))[-1] #(path.split(selected_tracks[0]))[0]
+        for track in selected_tracks:
+            track = (track.split('/'))[-1]
+            Track_box.insert(END, track)
 
-        Music_Slider.config(to=track_duration)  #  giving our music slider the right length
-        Music_Slider.set(0)
-
-        Track_length_hms_label.config(text=f"{timedelta(seconds=track_duration)}")
-        Pause_resume_button.config(text="^", command=play)
-        Music_Slider.config(state=ACTIVE)
-
-        mixer.init()
-        mixer.music.load(current_track_path)
-        mixer.music.set_volume(Volume_Slider.get())
+        # Music_Slider.config(to=track_duration)  #  giving our music slider the right length
+        # Music_Slider.set(0)
+        #
+        # Track_length_hms_label.config(text=f"{timedelta(seconds=track_duration)}")
+        # Pause_resume_button.config(text="^", command=play)
+        # Music_Slider.config(state=ACTIVE)
+        #
+        # mixer.init()
+        # mixer.music.load(current_tracks_path)
+        # mixer.music.set_volume(Volume_Slider.get())
     except Exception as e:
         print(e)
 
 
 def play():
     global is_playing
+    global current_track_title
+    global current_tracks_path
+    if current_track_title == "":
+        current_track_title = Track_box.get(ANCHOR)
+        track_duration = know_track_duration(current_tracks_path)
+        Track_length_hms_label.config(text=timedelta(seconds=track_duration))
+
     is_playing = True
     Pause_resume_button.config(text="=", command=pause)
 
@@ -86,10 +83,12 @@ def play():
     except Exception as e:
         print(e)
 
+
 def replay():
     Pause_resume_button.config(text="=", command=pause)
     Music_Slider.set(0)
     play()
+
 
 def pause():
     global is_playing
@@ -209,7 +208,7 @@ Track_box = Listbox(Playlist_frame, bg='purple', fg='white', width=100, yscrollc
 
 # Buttons
 
-Select_track_button = Button(master, text="Select track", command=select_track)
+Select_track_button = Button(master, text="Select track", command=select_tracks)
 Skip_forward_button = Button(Control_buttons_frame, text=">>", command=skip_forward)
 
 Skip_backwards_button = Button(Control_buttons_frame, text="<<", command=skip_backwards)
