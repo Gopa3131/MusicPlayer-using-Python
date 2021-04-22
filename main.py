@@ -10,7 +10,9 @@ from tkinter import Tk, Label, Button, Scale, filedialog
 from tkinter import *
 
 from datetime import timedelta
+
 from subprocess import run
+from os import path
 
 current_volume = float(0.5)
 current_track_title = ""
@@ -44,13 +46,13 @@ def select_tracks():
     global current_tracks_path
     try:
         selected_tracks = filedialog.askopenfilenames(initialdir="C:/", filetypes=media_filetypes)
-        #if selected_tracks == "":
-         #   return
-        current_tracks_path = (selected_tracks[0].split('/'))[-1] #(path.split(selected_tracks[0]))[0]
-        for track in selected_tracks:
-            track = (track.split('/'))[-1]
-            Track_box.insert(END, track)
+        current_tracks_path = (path.split(selected_tracks[0]))[0]
+        print("---" + current_tracks_path)
+        for track_title in selected_tracks:
+            track_title = (track_title.split('/'))[-1]
+            Track_box.insert(END, track_title)
 
+        mixer.init()
         # Music_Slider.config(to=track_duration)  #  giving our music slider the right length
         # Music_Slider.set(0)
         #
@@ -66,17 +68,12 @@ def select_tracks():
 
 
 def play():
+
     global is_playing
     global current_track_title
     global current_tracks_path
-    if current_track_title == "":
-        current_track_title = Track_box.get(ANCHOR)
-        track_duration = know_track_duration(current_tracks_path)
-        Track_length_hms_label.config(text=timedelta(seconds=track_duration))
-
     is_playing = True
     Pause_resume_button.config(text="=", command=pause)
-
     try:
         mixer.music.play(start=Music_Slider.get())
         update_music_slider_position()
@@ -101,6 +98,32 @@ def pause():
     except Exception as e:
         print(e)
 
+
+def show_action(event):
+    if current_track_title != Track_box.get(ANCHOR):
+        Pause_resume_button.config(text="^", command=play_selected_track)
+        print("not current")
+    elif is_playing:
+        Pause_resume_button.config(text="=", command=pause)
+        print("this track")
+    else:
+        Pause_resume_button.config(text="^", command=play)
+        print("this track")
+
+
+def play_selected_track():
+    global current_track_title
+    global track_duration
+    mixer.music.stop()
+    mixer.music.unload()
+    current_track_title = Track_box.get(ANCHOR)
+    track_duration = know_track_duration(current_tracks_path)
+    Track_length_hms_label.config(text=timedelta(seconds=track_duration))
+    Music_Slider.config(to=track_duration)
+    Music_Slider.set(0)
+    Time_passed_label.config(text="0:00:00")
+    mixer.music.load(current_tracks_path + current_track_title)
+    play()
 
 def skip_forward():
     global is_playing
@@ -143,12 +166,11 @@ def update_music_slider_position():
     if is_playing:
         after_id = Time_passed_label.after(1000, update_music_slider_position)
         Music_Slider.set(current_song_position + 1)
-        print(current_song_position)
 
 
 def manipulate_volume(curr_volume):
     try:
-        mixer.music.set_volume(Volume_Slider.get())
+        mixer.music.set_volume(curr_volume)
     except Exception as e:
         print(e)
 
@@ -204,6 +226,7 @@ Playlist_frame.pack(fill=X, padx=20)
 
 Playlist_scrollbar = Scrollbar(Playlist_frame)
 Track_box = Listbox(Playlist_frame, bg='purple', fg='white', width=100, yscrollcommand=Playlist_scrollbar.set)
+Track_box.bind('<<ListboxSelect>>', show_action)
 
 
 # Buttons
