@@ -112,6 +112,7 @@ def play_selected_track():
     Music_Slider.config(to=track_duration)
     Music_Slider.set(0)
     Time_passed_label.config(text="0:00:00")
+    Track_being_played.config(text=current_track_title)
     mixer.music.load(current_tracks_path + current_track_title)
     play()
 
@@ -158,9 +159,9 @@ def update_music_slider_position():
         Music_Slider.set(current_song_position + 1)
 
 
-def manipulate_volume(curr_volume):
+def manipulate_volume(x):
     try:
-        mixer.music.set_volume(curr_volume)
+        mixer.music.set_volume(Volume_Slider.get())
     except Exception as e:
         print(e)
 
@@ -201,7 +202,13 @@ master.resizable(False, False)
 # Creating and packing frames
 
 Main_bottom_frame = Frame(master)
-Main_bottom_frame.pack(side=BOTTOM, pady=20)
+Main_bottom_frame.pack(side=BOTTOM, pady=10)
+
+Volume_slider_frame = Frame(Main_bottom_frame)
+Volume_slider_frame.pack(fill=X)
+
+Track_being_played = Label(master, bg="#ffffff")
+Track_being_played.pack(side=BOTTOM)
 
 Control_buttons_frame = Frame(Main_bottom_frame)
 Control_buttons_frame.pack(side=BOTTOM)
@@ -213,7 +220,7 @@ Playlist_frame = Frame(master)
 Playlist_frame.pack(fill=X, padx=20)
 
 
-# Play list
+# Play list menu
 
 Playlist_scrollbar = Scrollbar(Playlist_frame)
 Track_box = Listbox(Playlist_frame, bg='purple', fg='white', width=100, yscrollcommand=Playlist_scrollbar.set)
@@ -237,18 +244,18 @@ Music_Slider = Scale(Main_bottom_frame, orient="horizontal", showvalue=False, le
 Music_Slider.bind('<ButtonRelease-1>', manipulate_track_time)
 Music_Slider.bind('<ButtonPress-1>', stop_while_manipulating)
 
-Volume_Slider = Scale(Main_bottom_frame, orient="horizontal", length=80, from_=0, to=1, resolution=0.01, command=manipulate_volume)
+Volume_Slider = Scale(Volume_slider_frame, orient="horizontal", showvalue=False ,length=80, from_=0, to=1, resolution=0.01, command=manipulate_volume)
 Volume_Slider.set(current_volume)
+Volume_Slider.pack(side=RIGHT)
 
 # Labels
-Track_being_played = Label(master, text="\n")
 
 Track_length_hms_label = Label(Track_time_frame, text="0:00:00")
 
 Time_passed_label = Label(Track_time_frame, text="0:00:00")
 
 # Packing widgets into frames
-Select_track_button.pack(pady=15)
+Select_track_button.pack(pady=10)
 
 Playlist_scrollbar.pack(side=RIGHT,fill=Y)
 
