@@ -46,29 +46,22 @@ def select_tracks():
     global current_tracks_path
     try:
         selected_tracks = filedialog.askopenfilenames(initialdir="C:/", filetypes=media_filetypes)
+        if not selected_tracks:
+            return
+        else:
+            Track_box.delete(0, END)
         current_tracks_path = (path.split(selected_tracks[0]))[0]
         print("---" + current_tracks_path)
         for track_title in selected_tracks:
             track_title = (track_title.split('/'))[-1]
             Track_box.insert(END, track_title)
-
         mixer.init()
-        # Music_Slider.config(to=track_duration)  #  giving our music slider the right length
-        # Music_Slider.set(0)
-        #
-        # Track_length_hms_label.config(text=f"{timedelta(seconds=track_duration)}")
-        # Pause_resume_button.config(text="^", command=play)
-        # Music_Slider.config(state=ACTIVE)
-        #
-        # mixer.init()
-        # mixer.music.load(current_tracks_path)
-        # mixer.music.set_volume(Volume_Slider.get())
+
     except Exception as e:
         print(e)
 
 
 def play():
-
     global is_playing
     global current_track_title
     global current_tracks_path
@@ -100,23 +93,20 @@ def pause():
 
 
 def show_action(event):
-    if current_track_title != Track_box.get(ANCHOR):
-        Pause_resume_button.config(text="^", command=play_selected_track)
-        print("not current")
-    elif is_playing:
-        Pause_resume_button.config(text="=", command=pause)
-        print("this track")
-    else:
-        Pause_resume_button.config(text="^", command=play)
-        print("this track")
+    pass
 
 
 def play_selected_track():
     global current_track_title
     global track_duration
+    global after_id
     mixer.music.stop()
     mixer.music.unload()
-    current_track_title = Track_box.get(ANCHOR)
+    try:
+        Time_passed_label.after_cancel(after_id)
+    except Exception as e:
+        print(e)
+    current_track_title = Track_box.get(ACTIVE)
     track_duration = know_track_duration(current_tracks_path)
     Track_length_hms_label.config(text=timedelta(seconds=track_duration))
     Music_Slider.config(to=track_duration)
@@ -222,6 +212,7 @@ Track_time_frame.pack(fill=X, side=BOTTOM)
 Playlist_frame = Frame(master)
 Playlist_frame.pack(fill=X, padx=20)
 
+
 # Play list
 
 Playlist_scrollbar = Scrollbar(Playlist_frame)
@@ -231,15 +222,18 @@ Track_box.bind('<<ListboxSelect>>', show_action)
 
 # Buttons
 
-Select_track_button = Button(master, text="Select track", command=select_tracks)
+Select_track_button = Button(Playlist_frame, text="Select tracks", command=select_tracks)
 Skip_forward_button = Button(Control_buttons_frame, text=">>", command=skip_forward)
 
 Skip_backwards_button = Button(Control_buttons_frame, text="<<", command=skip_backwards)
 
 Pause_resume_button = Button(Control_buttons_frame, text="^", command=play)
 
+Select_new_track_button = Button(Playlist_frame, text="Play selected", command=play_selected_track)
+
+
 # Sliders
-Music_Slider = Scale(Main_bottom_frame, state=DISABLED, orient="horizontal", showvalue=False, length=330, from_=0, resolution=1, repeatdelay=0, command=slideOfmusicSlider)
+Music_Slider = Scale(Main_bottom_frame, orient="horizontal", showvalue=False, length=330, from_=0, resolution=1, repeatdelay=0, command=slideOfmusicSlider)
 Music_Slider.bind('<ButtonRelease-1>', manipulate_track_time)
 Music_Slider.bind('<ButtonPress-1>', stop_while_manipulating)
 
@@ -258,7 +252,8 @@ Select_track_button.pack(pady=15)
 
 Playlist_scrollbar.pack(side=RIGHT,fill=Y)
 
-Track_box.pack(pady=30, padx=20)
+Track_box.pack(padx=20)
+Select_new_track_button.pack(fill=X, padx=20)
 
 Music_Slider.pack(side=TOP)
 
