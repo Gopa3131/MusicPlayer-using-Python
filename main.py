@@ -20,7 +20,7 @@ current_tracks_path = ""
 track_duration = 0
 is_playing = False
 after_id = 0
-media_filetypes = [('media files', ('*.mp3', '*.mp4', '*.flac', '*.ogg', '*.wav', '*.ape', '*.au', '*.aiff'))]
+media_filetypes = [('media files', ('*.mp3', '*.flac', '*.ogg', '*.wav'))]
 
 
 
