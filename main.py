@@ -23,7 +23,6 @@ after_id = 0
 media_filetypes = [('media files', ('*.mp3', '*.flac', '*.ogg', '*.wav'))]
 
 
-
 #  utility functions
 
 
