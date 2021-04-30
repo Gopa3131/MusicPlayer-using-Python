@@ -112,7 +112,7 @@ def play_selected_track():
     Music_Slider.set(0)
     Time_passed_label.config(text="0:00:00")
     Track_being_played.config(text=current_track_title)
-    mixer.music.load(current_tracks_path + current_track_title)
+    mixer.music.load(current_tracks_path + "/" + current_track_title)
     play()
 
 def skip_forward():
@@ -147,6 +147,23 @@ def skip_backwards():
             Music_Slider.set(0)
         else:
             Music_Slider.set(current_pos - 5)
+
+
+def next_track():
+    global current_track_title
+
+    index = Track_box.get(0, "end").index(current_track_title)
+
+    if Track_box.size == index + 1:
+        return
+
+    Track_box.select_anchor(index+1)
+
+    play_selected_track()
+
+
+def prev_track():
+    pass
 
 
 def update_music_slider_position():
@@ -229,13 +246,15 @@ Track_box.bind('<<ListboxSelect>>', show_action)
 # Buttons
 
 Select_track_button = Button(Playlist_frame, text="Select tracks", command=select_tracks)
-Skip_forward_button = Button(Control_buttons_frame, text=">>", command=skip_forward)
+Select_new_track_button = Button(Playlist_frame, text="Play selected", command=play_selected_track)
 
+Skip_forward_button = Button(Control_buttons_frame, text=">>", command=skip_forward)
 Skip_backwards_button = Button(Control_buttons_frame, text="<<", command=skip_backwards)
 
-Pause_resume_button = Button(Control_buttons_frame, text="^", command=play)
+Next_track_button = Button(Control_buttons_frame, text=">", command=next_track)
+Previous_track_button = Button(Control_buttons_frame, text="<", command=prev_track)
 
-Select_new_track_button = Button(Playlist_frame, text="Play selected", command=play_selected_track)
+Pause_resume_button = Button(Control_buttons_frame, text="^", command=play)
 
 
 # Sliders
@@ -263,9 +282,11 @@ Select_new_track_button.pack(fill=X, padx=20)
 
 Music_Slider.pack(side=TOP)
 
+Previous_track_button.pack(side=LEFT, padx=10)
 Skip_backwards_button.pack(side=LEFT, padx=10)
 Pause_resume_button.pack(side=LEFT, padx=10)
 Skip_forward_button.pack(side=LEFT,padx=10)
+Next_track_button.pack(side=LEFT, padx=10)
 
 #Volume_Slider.pack(side=RIGHT,padx=20, ipady=6)
 
