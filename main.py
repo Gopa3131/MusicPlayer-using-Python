@@ -55,6 +55,7 @@ def select_tracks():
             track_title = (track_title.split('/'))[-1]
             Track_box.insert(END, track_title)
         mixer.init()
+        Music_Slider.config(state=ACTIVE)
 
     except Exception as e:
         print(e)
@@ -153,17 +154,36 @@ def next_track():
     global current_track_title
 
     index = Track_box.get(0, "end").index(current_track_title)
+    Track_box.selection_clear(0, "end")
 
-    if Track_box.size == index + 1:
+    if Track_box.size() == index + 1:
+        Track_box.activate(0)
+        Track_box.selection_set(0)
+        play_selected_track()
         return
 
-    Track_box.select_anchor(index+1)
-
+    Track_box.activate(index+1)
+    Track_box.selection_set(index+1)
     play_selected_track()
 
 
 def prev_track():
-    pass
+    global current_track_title
+
+    index = Track_box.get(0, "end").index(current_track_title)
+    Track_box.selection_clear(0, "end")
+
+    if index == 0:
+        Track_box.activate(Track_box.size() - 1)
+        Track_box.selection_set(Track_box.size() - 1)
+        play_selected_track()
+        return
+
+    Track_box.activate(index - 1)
+    Track_box.selection_set(index-1)
+    play_selected_track()
+
+
 
 
 def update_music_slider_position():
@@ -208,6 +228,10 @@ def slideOfmusicSlider(x):
         Time_passed_label.after_cancel(after_id)
 
 
+def scrollbar_mouse_control():
+    Playlist_scrollbar.set()
+
+
 # Main Screen
 master = Tk()  # creating the main window
 master.title("Ultimate Music Player")  # assigning a name to our main window (program)
@@ -215,9 +239,12 @@ master['bg'] = "#FFFFFF"  # setting white background color for main  window
 master.geometry('450x450')
 master.resizable(False, False)
 
+
+# Images
+
 # Creating and packing frames
 
-Main_bottom_frame = Frame(master)
+Main_bottom_frame = Frame(master, bg='#ffffff')
 Main_bottom_frame.pack(side=BOTTOM, pady=10)
 
 Volume_slider_frame = Frame(Main_bottom_frame)
@@ -226,7 +253,7 @@ Volume_slider_frame.pack(fill=X)
 Track_being_played = Label(master, bg="#ffffff")
 Track_being_played.pack(side=BOTTOM)
 
-Control_buttons_frame = Frame(Main_bottom_frame)
+Control_buttons_frame = Frame(Main_bottom_frame, bg='#ffffff')
 Control_buttons_frame.pack(side=BOTTOM)
 
 Track_time_frame = Frame(Main_bottom_frame)
@@ -239,9 +266,14 @@ Playlist_frame.pack(fill=X, padx=20)
 # Play list menu
 
 Playlist_scrollbar = Scrollbar(Playlist_frame)
-Track_box = Listbox(Playlist_frame, bg='purple', fg='white', width=100, yscrollcommand=Playlist_scrollbar.set)
+Track_box = Listbox(Playlist_frame,selectbackground="#C0C0C0", bd=5, fg="#000000", selectmode=SINGLE, bg='purple', width=100, yscrollcommand=Playlist_scrollbar.set)
 Track_box.bind('<<ListboxSelect>>', show_action)
+Playlist_scrollbar.config(command=Track_box.yview)
 
+#
+
+#autoplay_checkbox = Checkbutton(master, )
+#autoplay_checkbox.pack()
 
 # Buttons
 
@@ -258,7 +290,8 @@ Pause_resume_button = Button(Control_buttons_frame, text="^", command=play)
 
 
 # Sliders
-Music_Slider = Scale(Main_bottom_frame, orient="horizontal", showvalue=False, length=330, from_=0, resolution=1, repeatdelay=0, command=slideOfmusicSlider)
+
+Music_Slider = Scale(Main_bottom_frame, state=DISABLED, orient="horizontal", showvalue=False, length=330, from_=0, resolution=1, repeatdelay=0, command=slideOfmusicSlider)
 Music_Slider.bind('<ButtonRelease-1>', manipulate_track_time)
 Music_Slider.bind('<ButtonPress-1>', stop_while_manipulating)
 
