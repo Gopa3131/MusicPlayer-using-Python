@@ -20,6 +20,7 @@ current_tracks_path = ""
 track_duration = 0
 is_playing = False
 after_id = 0
+autoplay = 0
 media_filetypes = [('media files', ('*.mp3', '*.flac', '*.ogg', '*.wav'))]
 
 
@@ -204,7 +205,22 @@ def manipulate_volume(x):
 
 def manipulate_track_time(curr_time):
     global is_playing
-    if Music_Slider.get() == track_duration:
+    global autoplay
+    if autoplay & (Music_Slider.get() == track_duration):
+
+        index = Track_box.get(0, "end").index(current_track_title)
+        Track_box.selection_clear(0, "end")
+        if Track_box.size() != index + 1:
+            Track_box.activate(index+1)
+            Track_box.selection_set(index+1)
+            play_selected_track()
+            return
+        else:
+            Track_box.activate(0)
+            Track_box.selection_set(0)
+            play_selected_track()
+            return
+    elif Music_Slider.get() == track_duration:
         Pause_resume_button.config(text="↺", command=replay)
         Time_passed_label.after_cancel(after_id)
         is_playing = False
@@ -221,15 +237,38 @@ def stop_while_manipulating(x):
 
 def slideOfmusicSlider(x):
     global after_id
+    global autoplay
     Time_passed_label.config(text=timedelta(seconds=int(x)))
-    if int(x) == track_duration:
-        is_playing = False
+    if autoplay & (int(x) == track_duration):
+
+        index = Track_box.get(0, "end").index(current_track_title)
+        Track_box.selection_clear(0, "end")
+        if Track_box.size() != index + 1:
+            Track_box.activate(index + 1)
+            Track_box.selection_set(index + 1)
+            play_selected_track()
+            return
+        else:
+            Track_box.activate(0)
+            Track_box.selection_set(0)
+            play_selected_track()
+            return
+    elif int(x) == track_duration:
         Pause_resume_button.config(text="↺", command=replay)
         Time_passed_label.after_cancel(after_id)
+        is_playing = False
 
 
 def scrollbar_mouse_control():
     Playlist_scrollbar.set()
+
+
+def enable_autoplay():
+    global autoplay
+    if autoplay:
+        autoplay = False
+    else:
+        autoplay = True
 
 
 # Main Screen
@@ -272,8 +311,8 @@ Playlist_scrollbar.config(command=Track_box.yview)
 
 #
 
-#autoplay_checkbox = Checkbutton(master, )
-#autoplay_checkbox.pack()
+autoplay_checkbox = Checkbutton(master, text="Autoplay", bg="#ffffff",variable=autoplay, onvalue=True, offvalue=False, command=enable_autoplay)
+autoplay_checkbox.pack()
 
 # Buttons
 
