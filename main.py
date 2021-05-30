@@ -49,6 +49,9 @@ def select_tracks():
         if not selected_tracks:
             return
         else:
+            tracks_num = len(selected_tracks)
+            if tracks_num > 10:
+                new_slider.config(to=tracks_num-10, state=ACTIVE)
             Track_box.delete(0, END)
         current_tracks_path = (path.split(selected_tracks[0]))[0]
         for track_title in selected_tracks:
@@ -313,8 +316,8 @@ Playlist_frame.pack(fill=X, padx=20)
 # Play list menu
 
 #Playlist_scrollbar = Scrollbar(Playlist_frame, troughcolor="#ffffff", bg="#000000", activebackground="#0F031D")
-new_slider = Scale(Playlist_frame, length=150,showvalue=0, activebackground="#000000" ,troughcolor="#ffffff", bg="#000000",from_=0, to=10, resolution=1, orient = VERTICAL)
-Track_box = Listbox(Playlist_frame,selectbackground="#C0C0C0", bd=5, fg="#000000", selectmode=SINGLE, bg='white', width=100)#, yscrollcommand=new_slider.set)
+new_slider = Scale(Playlist_frame, state=DISABLED, length=150,showvalue=0, activebackground="#000000" ,troughcolor="#ffffff", bg="#000000",from_=0, to=10, resolution=1, orient = VERTICAL)
+Track_box = Listbox(Playlist_frame,selectbackground="#C0C0C0", bd=5, fg="#000000", selectmode=SINGLE, bg='white', width=100, yscrollcommand=)
 Track_box.bind('<<ListboxSelect>>', show_action)
 new_slider.config(command=Track_box.yview)
 #Playlist_scrollbar.config(command=Track_box.yview)
