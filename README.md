@@ -1,5 +1,5 @@
-# MusicPlayer-using-Python
-This is a repository dedicated to my Music Player that comes as my high school project for TRPO.
------------------------
-This music player will be built using libraries such as mixer from pygame (for music part), Tkinter (for GUI).
-Also ffmpeg will be used to support multiple audio formats.
+_______Инструкция к запуску_______
+В этом репозитории лежит архив с приложением.
+Для работы этого приложения нужно скачать один файл консольного приложения, которое называется ffprobe, оно находится в архиве,
+  который можно скачать тут: https://www.gyan.dev/ffmpeg/builds/ ,
+    далее путь до этого приложения нужно добавить в path вашего текущего пользователя.
