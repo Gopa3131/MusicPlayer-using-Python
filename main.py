@@ -159,8 +159,8 @@ class MusicPlayer:
     def know_track_duration(self, path_to_track):
         try:
             process = run(
-                f'ffprobe -v quiet -show_entries format=duration -of default=noprint_wrappers=1 "{self.current_track_title}"',
-                shell=True, capture_output=True, text=True, cwd=path_to_track)
+                f'ffprobe -v quiet -show_entries format=duration -of default=noprint_wrappers=1 "{self.current_tracks_path + "/" + self.current_track_title}"',
+                shell=True, capture_output=True, text=True, cwd=path.dirname((path.abspath(__file__))))
             duration = process.stdout.split("=")  # this is gonna be something like duration=370.00032
             duration = duration[-1]
             duration = int(float(duration))
