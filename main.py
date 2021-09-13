@@ -158,6 +158,7 @@ class MusicPlayer:
 
     def know_track_duration(self, path_to_track):
         try:
+            print(path.dirname((path.abspath(__file__))))
             process = run(
                 f'ffprobe -v quiet -show_entries format=duration -of default=noprint_wrappers=1 "{self.current_tracks_path + "/" + self.current_track_title}"',
                 shell=True, capture_output=True, text=True, cwd=path.dirname((path.abspath(__file__))))
@@ -296,9 +297,12 @@ class MusicPlayer:
             self.after_id = self.Time_passed_label.after(1000, self.update_Music_Slider_position)
             self.Music_Slider.set(current_song_position + 1)
 
-    def manipulate_volume(self, x):
+    def manipulate_volume(self, x): # баг тут
         try:
-            mixer.music.set_volume(self.Volume_Slider.get())
+            if self.is_playing:
+                mixer.music.set_volume(self.Volume_Slider.get())
+            else:
+                pass
         except Exception as e:
             print(e)
 
